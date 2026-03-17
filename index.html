@@ -135,7 +135,10 @@
                     <label><input type="checkbox" id="nvqs" onchange="calculate()"> Giấy NVQS</label>
                     <label><input type="checkbox" id="coop" onchange="calculate()"> Hợp tác (5p)</label>
                     <label><input type="checkbox" id="invest" onchange="calculate()"> Điều tra (10p)</label>
-                    <input type="number" id="bills" placeholder="Số bill nợ" oninput="calculate()">
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <input type="number" id="bills" placeholder="Số bill nợ" oninput="calculate()" value="6" min="0" style="margin: 0; padding: 8px;">
+                        <span style="font-size: 11px; font-weight: bold;">Bills</span>
+                    </div>
                 </div>
 
                 <div class="output-box" id="result-display">Tên: <br>CCCD: <br>Tội danh: <br>Mức án: 0p<br>Đã xử lý</div>
@@ -227,6 +230,7 @@
                     normalTotal += time;
                     selected.push(crimeName);
                 }
+                // Xác định nếu có bất kỳ tội danh nào >= 30p (Khoản 2 trở lên)
                 if(time >= 30) hasK2 = true;
             }
         });
@@ -239,8 +243,12 @@
         // Tổng án cuối cùng = Tội thường (đã bị chặn ở 180p) + Tội đặc biệt (360p)
         let total = normalTotal + specialTotal;
 
+        // Logic Nợ xấu mới: 1 bill = 5p. Chỉ cộng nếu hasK2 (Khoản 2 trở lên)
         let bills = parseInt(document.getElementById('bills').value) || 0;
-        if(hasK2 && bills > 5) total += (bills - 5) * 5;
+        if(hasK2 && bills >= 6) {
+            total += (bills * 5);
+        }
+        
         if(document.getElementById('nvqs').checked) total -= 5;
         if(document.getElementById('coop').checked) total -= 5;
         if(document.getElementById('invest').checked) total -= 10;
@@ -261,7 +269,19 @@
         alert("Đã sao chép hồ sơ!");
     }
 
-    function resetForm() { location.reload(); }
+    function resetForm() {
+        // Chỉ reset các checkbox tội danh và ô số lượng, giữ nguyên trạng thái đăng nhập
+        document.querySelectorAll('.cb-crime').forEach(cb => cb.checked = false);
+        document.querySelectorAll('input[id^="qty-"]').forEach(input => input.value = 1);
+        // Reset các checkbox giảm án và thông tin cá nhân (tùy chọn, ở đây reset hết cho sạch)
+        document.getElementById('nvqs').checked = false;
+        document.getElementById('coop').checked = false;
+        document.getElementById('invest').checked = false;
+        document.getElementById('obj-name').value = "";
+        document.getElementById('obj-cccd').value = "";
+        document.getElementById('bills').value = 6;
+        calculate(); 
+    }
 </script>
 </body>
 </html>
