@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LSSD - Hệ Thống Hỗ Trợ Xử Án</title>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth-compat.js"></script>
     <style>
         :root {
             --primary: #d4a017;
@@ -24,7 +22,7 @@
             min-height: 100vh;
         }
 
-        /* LOGIN BOX */
+        /* CHỈ HIỆN LOGIN BOX KHI CHƯA ĐĂNG NHẬP */
         #login-screen {
             background: var(--glass);
             padding: 40px;
@@ -32,9 +30,11 @@
             box-shadow: var(--shadow);
             text-align: center;
             width: 350px;
+            z-index: 999; /* Đảm bảo nằm trên cùng */
         }
         #login-screen h2 { color: var(--primary); margin-bottom: 20px; }
-        input[type="email"], input[type="password"], input[type="text"], input[type="number"] {
+        
+        input[type="text"], input[type="password"], input[type="number"] {
             width: 100%;
             padding: 12px;
             margin: 10px 0;
@@ -54,19 +54,20 @@
             margin-top: 10px;
         }
 
-        /* APP INTERFACE */
+        /* ẨN TOÀN BỘ APP SCREEN MẶC ĐỊNH */
         #app-screen {
-            display: none;
+            display: none; /* Quan trọng: Phải là none để không bị hiện như trong ảnh của bạn */
             width: 95%;
             max-width: 1200px;
             background: var(--glass);
             border-radius: 15px;
             height: 90vh;
             overflow: hidden;
-            display: flex;
             flex-direction: column;
             box-shadow: var(--shadow);
+            position: fixed; /* Giữ cố định giữa màn hình khi hiện */
         }
+
         header {
             background: #fff;
             padding: 15px 25px;
@@ -82,65 +83,22 @@
             overflow: hidden;
         }
 
-        /* LEFT COLUMN: CRIMES */
-        .crimes-container {
-            padding: 20px;
-            overflow-y: auto;
-            border-right: 1px solid #eee;
-        }
-        .search-bar {
-            margin-bottom: 20px;
-            position: sticky;
-            top: 0;
-            background: var(--glass);
-            z-index: 10;
-        }
+        .crimes-container { padding: 20px; overflow-y: auto; border-right: 1px solid #eee; }
+        .search-bar { margin-bottom: 20px; position: sticky; top: 0; background: #fff; z-index: 10; }
         .law-section { margin-bottom: 25px; }
         .law-section h3 { border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 10px; }
         .crime-card {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            background: #fff;
-            margin-bottom: 5px;
-            border-radius: 5px;
-            transition: 0.2s;
-            cursor: pointer;
-            border: 1px solid #eee;
+            display: flex; align-items: center; padding: 10px; background: #fff; margin-bottom: 5px;
+            border-radius: 5px; border: 1px solid #eee; cursor: pointer; transition: 0.2s;
         }
         .crime-card:hover { background: #fff9e6; }
         .crime-card input { margin-right: 15px; transform: scale(1.3); }
 
-        /* RIGHT COLUMN: CALCULATION */
-        .calc-container {
-            padding: 20px;
-            background: #f9f9f9;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .output-box {
-            background: #fff9e6;
-            border: 2px solid #e74c3c;
-            padding: 20px;
-            border-radius: 10px;
-            font-weight: bold;
-            white-space: pre-wrap;
-            min-height: 150px;
-            font-family: monospace;
-        }
-        .reduction-panel {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            font-size: 13px;
-        }
+        .calc-container { padding: 20px; background: #f9f9f9; display: flex; flex-direction: column; gap: 15px; }
+        .output-box { background: #fff9e6; border: 2px solid #e74c3c; padding: 20px; border-radius: 10px; font-weight: bold; white-space: pre-wrap; min-height: 150px; font-family: monospace; }
+        .reduction-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; }
 
-        /* RESPONSIVE */
-        @media (max-width: 900px) {
-            .main-layout { grid-template-columns: 1fr; }
-            .calc-container { order: -1; height: auto; }
-        }
+        @media (max-width: 900px) { .main-layout { grid-template-columns: 1fr; } .calc-container { order: -1; height: auto; } }
     </style>
 </head>
 <body>
@@ -151,13 +109,13 @@
         <input type="text" id="user" placeholder="Tài khoản">
         <input type="password" id="pass" placeholder="Mật khẩu">
         <button class="btn-main" onclick="handleLogin()">ĐĂNG NHẬP</button>
-        <p id="error" style="color:red; font-size:12px"></p>
+        <p id="error" style="color:red; font-size:12px; margin-top: 10px;"></p>
     </div>
 
     <div id="app-screen">
         <header>
             <div style="font-weight: bold; color: var(--primary)">LSSD - HỖ TRỢ XỬ ÁN</div>
-            <button onclick="handleLogout()" style="background:none; border:none; color:red; cursor:pointer">Đăng xuất</button>
+            <button onclick="handleLogout()" style="background:none; border:none; color:red; cursor:pointer; font-weight:bold;">Đăng xuất</button>
         </header>
 
         <div class="main-layout">
@@ -165,14 +123,12 @@
                 <div class="search-bar">
                     <input type="text" id="search" placeholder="🔍 Tìm kiếm tội danh nhanh..." oninput="filterCrimes()">
                 </div>
-                
-                <div id="law-list">
-                    </div>
+                <div id="law-list"></div>
             </div>
 
             <div class="calc-container">
-                <input type="text" id="obj-name" placeholder="Tên đối tượng">
-                <input type="text" id="obj-cccd" placeholder="Số CCCD">
+                <input type="text" id="obj-name" placeholder="Tên đối tượng" oninput="calculate()">
+                <input type="text" id="obj-cccd" placeholder="Số CCCD" oninput="calculate()">
                 
                 <div class="reduction-panel">
                     <label><input type="checkbox" id="nvqs" onchange="calculate()"> Giấy NVQS</label>
@@ -181,13 +137,7 @@
                     <input type="number" id="bills" placeholder="Số bill nợ" oninput="calculate()">
                 </div>
 
-                <div class="output-box" id="result-display">
-Tên: 
-CCCD: 
-Tội danh: 
-Mức án: 0p
-Đã xử lý
-                </div>
+                <div class="output-box" id="result-display">Tên: <br>CCCD: <br>Tội danh: <br>Mức án: 0p<br>Đã xử lý</div>
 
                 <button class="btn-main" onclick="copyResult()">SAO CHÉP HỒ SƠ</button>
                 <button class="btn-main" style="background:#7f8c8d" onclick="resetForm()">RESET</button>
@@ -196,38 +146,29 @@ Mức án: 0p
     </div>
 
 <script>
-    // --- 1. TÀI KHOẢN CHUNG ---
-    const COMMON_ACCOUNT = {
-        user: "LSSD",
-        pass: "LSSD123"
-    };
+    const COMMON_ACCOUNT = { user: "LSSD", pass: "LSSD123" };
 
-    // --- 2. DỮ LIỆU LUẬT (Full bộ luật bạn gửi) ---
     const LAW_DATA = [
-        { title: "KHOẢN 1 (20 PHÚT)", time: 20, stack: false, items: ["Sử dụng nắm đấm gây rối", "Gây rối trật tự công cộng", "Cản trở người thi hành công vụ", "Hỗ trợ đồng bọn", "Sử dụng giáp trái phép", "Trộm cắp tài sản", "Nhập cư trái phép", "Vũ khí thô sơ công cộng", "Tàng trữ thảo dược", "Vu khống", "Lăng mạ xúc phạm", "Xúc phạm người đang làm nhiệm vụ"] },
-        { title: "KHOẢN 2 (30 PHÚT)", time: 30, stack: false, items: ["Gây thương tích chưa nghiêm trọng", "Chống đối người thi hành công vụ", "Xâm nhập trụ sở", "Đe dọa sĩ quan", "Rao bán vũ khí lậu", "Lừa đảo chiếm đoạt", "Giả dạng người nhà nước"] },
-        { title: "KHOẢN 3 & 4 (50p - 100p)", time: 50, stack: true, items: ["Gây thương tích nghiêm trọng", "Bạo động thành phố (x50p)", "Tấn công nhân viên y tế (x100p)"] }
+        { title: "KHOẢN 1 (20 PHÚT)", time: 20, items: ["Sử dụng nắm đấm gây rối", "Gây rối trật tự công cộng", "Cản trở người thi hành công vụ", "Hỗ trợ đồng bọn", "Sử dụng giáp trái phép", "Trộm cắp tài sản", "Nhập cư trái phép", "Vũ khí thô sơ công cộng", "Tàng trữ thảo dược", "Vu khống", "Lăng mạ xúc phạm", "Xúc phạm người đang làm nhiệm vụ"] },
+        { title: "KHOẢN 2 (30 PHÚT)", time: 30, items: ["Gây thương tích chưa nghiêm trọng", "Chống đối người thi hành công vụ", "Xâm nhập trụ sở", "Đe dọa sĩ quan", "Rao bán vũ khí lậu", "Lừa đảo chiếm đoạt", "Giả dạng người nhà nước"] },
+        { title: "KHOẢN 3 & 4 (50p - 100p)", time: 50, items: ["Gây thương tích nghiêm trọng", "Bạo động thành phố (x50p)", "Tấn công nhân viên y tế (x100p)"] }
     ];
 
-    // --- 3. LOGIC HỆ THỐNG ---
     function handleLogin() {
         const u = document.getElementById('user').value;
         const p = document.getElementById('pass').value;
         
-        // Kiểm tra tài khoản chung thay vì Firebase
         if (u === COMMON_ACCOUNT.user && p === COMMON_ACCOUNT.pass) {
+            // Khi đúng: Ẩn login, Hiện App
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'flex';
             initLawList();
-            document.getElementById('error').innerText = "";
         } else {
-            document.getElementById('error').innerText = "Tài khoản hoặc mật khẩu không chính xác!";
+            document.getElementById('error').innerText = "Tài khoản hoặc mật khẩu không đúng!";
         }
     }
 
-    function handleLogout() { 
-        location.reload(); // Làm mới trang để quay về màn hình đăng nhập
-    }
+    function handleLogout() { location.reload(); }
 
     function initLawList() {
         let html = '';
@@ -237,8 +178,7 @@ Mức án: 0p
                 html += `
                 <div class="crime-card" onclick="toggleCB('${sIdx}-${iIdx}')">
                     <input type="checkbox" class="cb-crime" id="cb-${sIdx}-${iIdx}" 
-                           data-name="${item}" data-time="${section.time}" 
-                           data-stack="${section.stack}" onchange="calculate()">
+                           data-name="${item}" data-time="${section.time}" onchange="calculate()">
                     <span>${item}</span>
                 </div>`;
             });
@@ -249,9 +189,7 @@ Mức án: 0p
 
     function toggleCB(id) {
         const cb = document.getElementById('cb-' + id);
-        if (event.target.tagName !== 'INPUT') {
-            cb.checked = !cb.checked;
-        }
+        if (event.target.tagName !== 'INPUT') cb.checked = !cb.checked;
         calculate();
     }
 
@@ -267,7 +205,6 @@ Mức án: 0p
             if(time >= 30) hasK2 = true;
         });
 
-        // Logic Nợ xấu & Giảm án
         let bills = parseInt(document.getElementById('bills').value) || 0;
         if(hasK2 && bills > 5) total += (bills - 5) * 5;
         if(document.getElementById('nvqs').checked) total -= 5;
@@ -281,8 +218,7 @@ Mức án: 0p
     function filterCrimes() {
         let query = document.getElementById('search').value.toLowerCase();
         document.querySelectorAll('.crime-card').forEach(card => {
-            let text = card.innerText.toLowerCase();
-            card.style.display = text.includes(query) ? 'flex' : 'none';
+            card.style.display = card.innerText.toLowerCase().includes(query) ? 'flex' : 'none';
         });
     }
 
@@ -291,9 +227,7 @@ Mức án: 0p
         alert("Đã sao chép hồ sơ!");
     }
 
-    function resetForm() {
-        location.reload();
-    }
+    function resetForm() { location.reload(); }
 </script>
 </body>
 </html>
