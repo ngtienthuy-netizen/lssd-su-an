@@ -30,7 +30,7 @@
             box-shadow: var(--shadow);
             text-align: center;
             width: 350px;
-            z-index: 999; /* Đảm bảo nằm trên cùng */
+            z-index: 999;
         }
         #login-screen h2 { color: var(--primary); margin-bottom: 20px; }
         
@@ -56,7 +56,7 @@
 
         /* ẨN TOÀN BỘ APP SCREEN MẶC ĐỊNH */
         #app-screen {
-            display: none; /* Quan trọng: Phải là none để không bị hiện như trong ảnh của bạn */
+            display: none;
             width: 95%;
             max-width: 1200px;
             background: var(--glass);
@@ -65,7 +65,7 @@
             overflow: hidden;
             flex-direction: column;
             box-shadow: var(--shadow);
-            position: fixed; /* Giữ cố định giữa màn hình khi hiện */
+            position: fixed;
         }
 
         header {
@@ -136,7 +136,7 @@
                     <label><input type="checkbox" id="coop" onchange="calculate()"> Hợp tác (5p)</label>
                     <label><input type="checkbox" id="invest" onchange="calculate()"> Điều tra (10p)</label>
                     <div style="display: flex; align-items: center; gap: 5px;">
-                        <input type="number" id="bills" placeholder="Số bill nợ" oninput="calculate()" value="6" min="0" style="margin: 0; padding: 8px;">
+                        <input type="number" id="bills" placeholder="Số bill nợ" oninput="calculate()" value="" min="6" style="margin: 0; padding: 8px;">
                         <span style="font-size: 11px; font-weight: bold;">Bills</span>
                     </div>
                 </div>
@@ -163,7 +163,6 @@
     function handleLogin() {
         const u = document.getElementById('user').value;
         const p = document.getElementById('pass').value;
-        
         if (u === COMMON_ACCOUNT.user && p === COMMON_ACCOUNT.pass) {
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'flex';
@@ -206,8 +205,8 @@
         let name = document.getElementById('obj-name').value || "Chưa rõ";
         let cccd = document.getElementById('obj-cccd').value || "Chưa rõ";
         
-        let normalTotal = 0; // Tổng thời gian cho các tội danh từ Khoản 1 đến Khoản 4
-        let specialTotal = 0; // Tổng thời gian cho các tội danh đặc biệt
+        let normalTotal = 0; 
+        let specialTotal = 0; 
         let selected = [];
         let hasK2 = false;
 
@@ -230,23 +229,21 @@
                     normalTotal += time;
                     selected.push(crimeName);
                 }
-                // Xác định nếu có bất kỳ tội danh nào >= 30p (Khoản 2 trở lên)
                 if(time >= 30) hasK2 = true;
             }
         });
 
-        // Áp dụng giới hạn 180p cho riêng nhóm tội danh thường (Khoản 1-4)
-        if (normalTotal > 180) {
-            normalTotal = 180;
-        }
+        if (normalTotal > 180) normalTotal = 180;
 
-        // Tổng án cuối cùng = Tội thường (đã bị chặn ở 180p) + Tội đặc biệt (360p)
         let total = normalTotal + specialTotal;
 
-        // Logic Nợ xấu mới: 1 bill = 5p. Chỉ cộng nếu hasK2 (Khoản 2 trở lên)
-        let bills = parseInt(document.getElementById('bills').value) || 0;
-        if(hasK2 && bills >= 6) {
-            total += (bills * 5);
+        // Logic Nợ xấu: Chỉ tính khi ô không trống, trị số >= 6 và có tội Khoản 2 trở lên
+        let billInput = document.getElementById('bills').value;
+        if(billInput !== "" && hasK2) {
+            let bills = parseInt(billInput);
+            if(bills >= 6) {
+                total += (bills * 5);
+            }
         }
         
         if(document.getElementById('nvqs').checked) total -= 5;
@@ -270,16 +267,14 @@
     }
 
     function resetForm() {
-        // Chỉ reset các checkbox tội danh và ô số lượng, giữ nguyên trạng thái đăng nhập
         document.querySelectorAll('.cb-crime').forEach(cb => cb.checked = false);
         document.querySelectorAll('input[id^="qty-"]').forEach(input => input.value = 1);
-        // Reset các checkbox giảm án và thông tin cá nhân (tùy chọn, ở đây reset hết cho sạch)
         document.getElementById('nvqs').checked = false;
         document.getElementById('coop').checked = false;
         document.getElementById('invest').checked = false;
         document.getElementById('obj-name').value = "";
         document.getElementById('obj-cccd').value = "";
-        document.getElementById('bills').value = 6;
+        document.getElementById('bills').value = ""; // Để trống ô bill khi reset
         calculate(); 
     }
 </script>
