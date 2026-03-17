@@ -14,8 +14,6 @@
         body {
             margin: 0;
             font-family: 'Segoe UI', sans-serif;
-            /* VỊ TRÍ 3: ẢNH NỀN TOÀN TRANG (BACKGROUND) */
-            /* Bạn có thể thay đổi link ảnh nền ở dòng dưới đây */
             background: linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(44, 62, 80, 0.9) 100%), 
                         url('MỜI BẠN CHÈN LINK ẢNH NỀN TOÀN TRANG VÀO ĐÂY') no-repeat center center fixed;
             background-size: cover;
@@ -26,16 +24,46 @@
             min-height: 100vh;
         }
 
-        /* CHỈ HIỆN LOGIN BOX KHI CHƯA ĐĂNG NHẬP */
+        /* --- PHẦN ĐĂNG NHẬP (ĐÃ CHỈNH SỬA) --- */
+        
+        /* Container mới để chứa cả Logo và Khung đăng nhập */
+        .login-wrapper {
+            position: relative; /* Làm điểm tựa cho logo absolute */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 350px;
+            /* Thiết lập chiều cao tối thiểu để wrapper không bị co lại khi logo bị đẩy lên */
+            min-height: 500px; 
+        }
+
+        /* Khung đăng nhập (Menu) */
         #login-screen {
             background: var(--glass);
             padding: 40px;
             border-radius: 20px;
             box-shadow: var(--shadow);
             text-align: center;
-            width: 350px;
-            z-index: 999;
+            width: 100%;
+            z-index: 2; /* Nằm trên logo */
+            position: relative; /* Để z-index hoạt động */
+            margin-top: 100px; /* Tạo khoảng trống phía trên cho logo */
         }
+
+        /* Logo Đăng nhập (Đã chỉnh sửa để to hơn và nằm sau 1 nửa) */
+        .login-logo {
+            position: absolute; /* Định vị tuyệt đối */
+            top: 0;
+            left: 50%; /* Căn giữa theo chiều ngang */
+            /* Vừa to hơn, vừa đẩy một nửa lên trên và căn giữa */
+            transform: translate(-50%, -50%); 
+            width: 200px; /* Tăng kích thước to hơn */
+            z-index: 1; /* Nằm dưới khung đăng nhập */
+            opacity: 0.8; /* Làm mờ nhẹ để trông nhập vai hơn */
+        }
+
+        /* --- KẾT THÚC PHẦN ĐĂNG NHẬP --- */
+
         #login-screen h2 { color: var(--primary); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
         
         input[type="text"], input[type="password"], input[type="number"] {
@@ -139,13 +167,16 @@
 </head>
 <body>
 
-    <div id="login-screen">
-        <img src="https://i.postimg.cc/j2yZYfrG/C13FB2CA-20C2-4134-9399-9DBC992D0258-removebg-preview.png" alt="LSSD LOGO" width="120" style="margin-bottom: 10px;">
-        <h2>LSSD SYSTEM</h2>
-        <input type="text" id="user" placeholder="Tài khoản">
-        <input type="password" id="pass" placeholder="Mật khẩu">
-        <button class="btn-main" onclick="handleLogin()">ĐĂNG NHẬP</button>
-        <p id="error" style="color:red; font-size:12px; margin-top: 10px; font-weight: bold;"></p>
+    <div class="login-wrapper">
+        <img src="https://i.postimg.cc/j2yZYfrG/C13FB2CA-20C2-4134-9399-9DBC992D0258-removebg-preview.png" alt="LSSD LOGO" class="login-logo">
+        
+        <div id="login-screen">
+            <h2>LSSD SYSTEM</h2>
+            <input type="text" id="user" placeholder="Tài khoản">
+            <input type="password" id="pass" placeholder="Mật khẩu">
+            <button class="btn-main" onclick="handleLogin()">ĐĂNG NHẬP</button>
+            <p id="error" style="color:red; font-size:12px; margin-top: 10px; font-weight: bold;"></p>
+        </div>
     </div>
 
     <div id="app-screen">
@@ -202,6 +233,8 @@
         const p = document.getElementById('pass').value;
         if (u === COMMON_ACCOUNT.user && p === COMMON_ACCOUNT.pass) {
             document.getElementById('login-screen').style.display = 'none';
+            // Khi đăng nhập thành công, ẩn cả cái container đăng nhập
+            document.querySelector('.login-wrapper').style.display = 'none'; 
             document.getElementById('app-screen').style.display = 'flex';
             initLawList();
             document.getElementById('error').innerText = "";
