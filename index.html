@@ -30,7 +30,7 @@
             box-shadow: var(--shadow);
             text-align: center;
             width: 350px;
-            z-index: 999;
+            z-index: 999; /* Đảm bảo nằm trên cùng */
         }
         #login-screen h2 { color: var(--primary); margin-bottom: 20px; }
         
@@ -56,7 +56,7 @@
 
         /* ẨN TOÀN BỘ APP SCREEN MẶC ĐỊNH */
         #app-screen {
-            display: none;
+            display: none; /* Quan trọng: Phải là none để không bị hiện như trong ảnh của bạn */
             width: 95%;
             max-width: 1200px;
             background: var(--glass);
@@ -65,7 +65,7 @@
             overflow: hidden;
             flex-direction: column;
             box-shadow: var(--shadow);
-            position: fixed;
+            position: fixed; /* Giữ cố định giữa màn hình khi hiện */
         }
 
         header {
@@ -87,13 +87,38 @@
         .search-bar { margin-bottom: 20px; position: sticky; top: 0; background: #fff; z-index: 10; }
         .law-section { margin-bottom: 25px; }
         .law-section h3 { border-left: 4px solid var(--primary); padding-left: 10px; margin-bottom: 10px; }
+        
+        /* Cải thiện mượt mà cho Crime Card */
         .crime-card {
-            display: flex; align-items: center; padding: 10px; background: #fff; margin-bottom: 5px;
-            border-radius: 5px; border: 1px solid #eee; cursor: pointer; transition: 0.2s;
+            display: flex; 
+            align-items: center; 
+            background: #fff; 
+            margin-bottom: 5px;
+            border-radius: 5px; 
+            border: 1px solid #eee; 
+            transition: 0.2s;
+            overflow: hidden;
         }
         .crime-card:hover { background: #fff9e6; }
-        .crime-card input[type="checkbox"] { margin-right: 15px; transform: scale(1.3); }
-        .crime-card input[type="number"] { width: 60px; margin-left: auto; padding: 5px; border-radius: 4px; border: 1px solid #ccc; }
+        
+        /* Label phủ kín diện tích card để click mượt */
+        .crime-label {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            width: 100%;
+            cursor: pointer;
+            user-select: none;
+        }
+        .crime-label input[type="checkbox"] { margin-right: 15px; transform: scale(1.3); cursor: pointer; }
+        
+        .crime-card input[type="number"] { 
+            width: 60px; 
+            margin-right: 10px;
+            padding: 5px; 
+            border-radius: 4px; 
+            border: 1px solid #ccc; 
+        }
 
         .calc-container { padding: 20px; background: #f9f9f9; display: flex; flex-direction: column; gap: 15px; }
         .output-box { background: #fff9e6; border: 2px solid #e74c3c; padding: 20px; border-radius: 10px; font-weight: bold; white-space: pre-wrap; min-height: 150px; font-family: monospace; }
@@ -132,10 +157,13 @@
                 <input type="text" id="obj-cccd" placeholder="Số CCCD" oninput="calculate()">
                 
                 <div class="reduction-panel">
-                    <label><input type="checkbox" id="nvqs" onchange="calculate()"> Giấy NVQS</label>
-                    <label><input type="checkbox" id="coop" onchange="calculate()"> Hợp tác (5p)</label>
-                    <label><input type="checkbox" id="invest" onchange="calculate()"> Điều tra (10p)</label>
-                    <div style="display: flex; align-items: center; gap: 5px;">
+                    <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" id="coop" onchange="calculate()"> Hợp tác (5p)
+                    </label>
+                    <label style="cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                        <input type="checkbox" id="invest" onchange="calculate()"> Điều tra (10p)
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 5px; grid-column: span 2;">
                         <input type="number" id="bills" placeholder="Số bill nợ" oninput="calculate()" value="" min="6" style="margin: 0; padding: 8px;">
                         <span style="font-size: 11px; font-weight: bold;">Bills</span>
                     </div>
@@ -179,26 +207,23 @@
         LAW_DATA.forEach((section, sIdx) => {
             html += `<div class="law-section"><h3>${section.title}</h3>`;
             section.items.forEach((item, iIdx) => {
+                const id = `cb-${sIdx}-${iIdx}`;
                 html += `
                 <div class="crime-card">
-                    <input type="checkbox" class="cb-crime" id="cb-${sIdx}-${iIdx}" 
-                           data-name="${item}" data-time="${section.time}" 
-                           data-stackable="${section.stackable}" 
-                           data-special="${section.special || false}"
-                           onchange="calculate()">
-                    <span onclick="toggleText('${sIdx}-${iIdx}')">${item}</span>
+                    <label class="crime-label" for="${id}">
+                        <input type="checkbox" class="cb-crime" id="${id}" 
+                               data-name="${item}" data-time="${section.time}" 
+                               data-stackable="${section.stackable}" 
+                               data-special="${section.special || false}"
+                               onchange="calculate()">
+                        <span>${item}</span>
+                    </label>
                     ${section.stackable ? `<input type="number" id="qty-${sIdx}-${iIdx}" value="1" min="1" oninput="calculate()">` : ''}
                 </div>`;
             });
             html += `</div>`;
         });
         document.getElementById('law-list').innerHTML = html;
-    }
-
-    function toggleText(id) {
-        const cb = document.getElementById('cb-' + id);
-        cb.checked = !cb.checked;
-        calculate();
     }
 
     function calculate() {
@@ -237,7 +262,6 @@
 
         let total = normalTotal + specialTotal;
 
-        // Logic Nợ xấu: Chỉ tính khi ô không trống, trị số >= 6 và có tội Khoản 2 trở lên
         let billInput = document.getElementById('bills').value;
         if(billInput !== "" && hasK2) {
             let bills = parseInt(billInput);
@@ -246,7 +270,6 @@
             }
         }
         
-        if(document.getElementById('nvqs').checked) total -= 5;
         if(document.getElementById('coop').checked) total -= 5;
         if(document.getElementById('invest').checked) total -= 10;
 
@@ -269,12 +292,11 @@
     function resetForm() {
         document.querySelectorAll('.cb-crime').forEach(cb => cb.checked = false);
         document.querySelectorAll('input[id^="qty-"]').forEach(input => input.value = 1);
-        document.getElementById('nvqs').checked = false;
         document.getElementById('coop').checked = false;
         document.getElementById('invest').checked = false;
         document.getElementById('obj-name').value = "";
         document.getElementById('obj-cccd').value = "";
-        document.getElementById('bills').value = ""; // Để trống ô bill khi reset
+        document.getElementById('bills').value = ""; 
         calculate(); 
     }
 </script>
