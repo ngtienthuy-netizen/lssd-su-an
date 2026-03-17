@@ -148,7 +148,7 @@
     <div id="login-screen">
         <img src="https://i.imgur.com/LSSD-LOGO-HERE.png" alt="LSSD LOGO" width="100">
         <h2>LSSD SYSTEM</h2>
-        <input type="email" id="email" placeholder="Email sĩ quan">
+        <input type="text" id="user" placeholder="Tài khoản">
         <input type="password" id="pass" placeholder="Mật khẩu">
         <button class="btn-main" onclick="handleLogin()">ĐĂNG NHẬP</button>
         <p id="error" style="color:red; font-size:12px"></p>
@@ -196,16 +196,11 @@ Mức án: 0p
     </div>
 
 <script>
-    // --- 1. CẤU HÌNH FIREBASE ---
-    const firebaseConfig = {
-        apiKey: "AIza...", 
-        authDomain: "your-app.firebaseapp.com",
-        projectId: "your-app",
-        storageBucket: "your-app.appspot.com",
-        messagingSenderId: "...",
-        appId: "..."
+    // --- 1. TÀI KHOẢN CHUNG ---
+    const COMMON_ACCOUNT = {
+        user: "LSSD",
+        pass: "LSSD123"
     };
-    firebase.initializeApp(firebaseConfig);
 
     // --- 2. DỮ LIỆU LUẬT (Full bộ luật bạn gửi) ---
     const LAW_DATA = [
@@ -216,27 +211,23 @@ Mức án: 0p
 
     // --- 3. LOGIC HỆ THỐNG ---
     function handleLogin() {
-        const email = document.getElementById('email').value;
-        const pass = document.getElementById('pass').value;
-        firebase.auth().signInWithEmailAndPassword(email, pass).catch(e => {
-            document.getElementById('error').innerText = "Lỗi đăng nhập!";
-        });
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+        
+        // Kiểm tra tài khoản chung thay vì Firebase
+        if (u === COMMON_ACCOUNT.user && p === COMMON_ACCOUNT.pass) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'flex';
+            initLawList();
+            document.getElementById('error').innerText = "";
+        } else {
+            document.getElementById('error').innerText = "Tài khoản hoặc mật khẩu không chính xác!";
+        }
     }
 
-    function handleLogout() { firebase.auth().signOut(); }
-
-    firebase.auth().onAuthStateChanged(user => {
-        const loginScr = document.getElementById('login-screen');
-        const appScr = document.getElementById('app-screen');
-        if (user) {
-            loginScr.style.display = 'none';
-            appScr.style.display = 'flex';
-            initLawList();
-        } else {
-            loginScr.style.display = 'block';
-            appScr.style.display = 'none';
-        }
-    });
+    function handleLogout() { 
+        location.reload(); // Làm mới trang để quay về màn hình đăng nhập
+    }
 
     function initLawList() {
         let html = '';
@@ -258,7 +249,9 @@ Mức án: 0p
 
     function toggleCB(id) {
         const cb = document.getElementById('cb-' + id);
-        cb.checked = !cb.checked;
+        if (event.target.tagName !== 'INPUT') {
+            cb.checked = !cb.checked;
+        }
         calculate();
     }
 
