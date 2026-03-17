@@ -202,33 +202,42 @@
     function calculate() {
         let name = document.getElementById('obj-name').value || "Chưa rõ";
         let cccd = document.getElementById('obj-cccd').value || "Chưa rõ";
-        let total = 0, selected = [], hasK2 = false, isSpecial = false;
+        
+        let normalTotal = 0; // Tổng thời gian cho các tội danh từ Khoản 1 đến Khoản 4
+        let specialTotal = 0; // Tổng thời gian cho các tội danh đặc biệt
+        let selected = [];
+        let hasK2 = false;
 
         document.querySelectorAll('.cb-crime:checked').forEach(cb => {
             const time = parseInt(cb.dataset.time);
-            const name = cb.dataset.name;
+            const crimeName = cb.dataset.name;
             const isStack = cb.dataset.stackable === "true";
-            const special = cb.dataset.special === "true";
+            const isSpecial = cb.dataset.special === "true";
 
-            if (special) isSpecial = true;
-
-            if (isStack) {
-                const idSuffix = cb.id.split('-').slice(1).join('-');
-                const qty = parseInt(document.getElementById('qty-' + idSuffix).value) || 1;
-                total += (time * qty);
-                selected.push(`${name} (x${qty})`);
+            if (isSpecial) {
+                specialTotal += time;
+                selected.push(crimeName);
             } else {
-                total += time;
-                selected.push(name);
+                if (isStack) {
+                    const idSuffix = cb.id.split('-').slice(1).join('-');
+                    const qty = parseInt(document.getElementById('qty-' + idSuffix).value) || 1;
+                    normalTotal += (time * qty);
+                    selected.push(`${crimeName} (x${qty})`);
+                } else {
+                    normalTotal += time;
+                    selected.push(crimeName);
+                }
+                if(time >= 30) hasK2 = true;
             }
-            
-            if(time >= 30 && !special) hasK2 = true;
         });
 
-        // Áp dụng giới hạn 180p trừ tội đặc biệt
-        if (!isSpecial && total > 180) {
-            total = 180;
+        // Áp dụng giới hạn 180p cho riêng nhóm tội danh thường (Khoản 1-4)
+        if (normalTotal > 180) {
+            normalTotal = 180;
         }
+
+        // Tổng án cuối cùng = Tội thường (đã bị chặn ở 180p) + Tội đặc biệt (360p)
+        let total = normalTotal + specialTotal;
 
         let bills = parseInt(document.getElementById('bills').value) || 0;
         if(hasK2 && bills > 5) total += (bills - 5) * 5;
